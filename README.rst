@@ -1,7 +1,7 @@
 ===========================================
-async_tasks - microbuild async fork, working on concurrent.futures
+async_tasks - Lightweight async build tool
 ===========================================
-worked on python 3
+microbuild fork
 
 Added
 ========
@@ -51,7 +51,7 @@ Example
     @task(a, b, c)
     def d(logger):
         time.sleep(2)
-        logger("sleep 1 sec")
+        logger("sleep 3 sec")
         pass
     
     
@@ -74,7 +74,7 @@ output:
        b:  sleep 2 sec
     task b is completed in 2 seconds
     task d(a, b, c) is started
-       d:  sleep 1 sec
+       d:  sleep 3 sec
     task d(a, b, c) is completed in 2 seconds
     build ended (c, a, b, d) in 4 seconds 
 
