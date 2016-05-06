@@ -58,6 +58,7 @@ Example
     run(d, workers=3, logger=Logger())
 
 output:
+::
 
     build started (c, a, b, d)
     task a is added to queue
