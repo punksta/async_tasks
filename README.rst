@@ -1,131 +1,81 @@
 ===========================================
-microbuild - Lightweight Python Build Tool.
+async_tasks - microbuild async fork, working on concurrent.futures
 ===========================================
+worked on python 3
 
-Calum J. Eadie (www.calumjeadie.com)
-
-Features
+Added
 ========
 
-* Really quick to learn.
-* Manages dependancies between tasks.
-* Automatically generates a command line interface.
+* Async executing on worker
+* Time of executing of each task
+* Better logging
 
-Related projects
-================
 
-Check out pynt_, microbuild's beefier younger brother. `Raghunandan Rao <https://github.com/rags>`_ has extended microbuild, adding features including:
+Rewrited
+========
+* Logging with case thread-safe
+* Task executing
 
-* Rake style parameter passing to tasks.
-* Running tasks by typing the first few characters.
-* Breaking up script into modules. 
 
-.. _pynt: http://rags.github.com/pynt/
+Removed
+========
+* Arg parsing and cl interface (will add soon)
+* Ignore task
 
-Installation
-============
-
-You can install microbuild from the Python Package Index (PyPI) or from source.
-
-Using pip::
-
-    $ pip install microbuild
-
-Using easy_install::
-
-    $ easy_install microbuild
 
 Example
-=======
-
-The build script is written in pure Python and microbuild takes care of managing
-any dependancies between tasks and generating a command line interface.
-
-Tasks are just regular Python functions marked with the ``@task()`` decorator. Dependancies
-are specified with ``@task()`` too. Tasks can be ignored with the ``@ignore`` decorator.
-
-After defining all tasks ``build(sys.modules[__name__],sys.argv[1:])`` is called to
-run the build.
+========
 
 ::
-
-    # example.py
-    import sys
-    from microbuild.microbuild import task,ignore,build
 
     @task()
-    def clean():
-        """Clean build directory."""
-        print "Cleaning build directory..."
-
-    @task(clean)
-    def html():
-        """Generate HTML."""
-        print "Generating HTML..."
-
-    @ignore
-    @task(clean)
-    def images():
-        """Prepare images."""
-        print "Preparing images..."
-
-    @task(html,images)
-    def android():
-        """Package Android app."""
-        print "Packaging android app..."
-        
-    if __name__ == "__main__":
-        build(sys.modules[__name__],sys.argv[1:])
-            
-The command line interface and help is automatically generated. Task descriptions
-are extracted from function docstrings.
-
-::
+    def a(logger):
+        logger("sleep 1 sec")
+        time.sleep(1)
+        pass
     
-    $ ./example.py -h
-    usage: example.py [-h] task
+    
+    @task()
+    def b(logger):
+        logger("sleep 2 sec")
+        time.sleep(2)
+        pass
+    
+    
+    @task()
+    def c(logger):
+        logger("pass")
+        pass
+    
+    
+    @task(a, b, c)
+    def d(logger):
+        time.sleep(2)
+        logger("sleep 1 sec")
+        pass
+    
+    
+    run(d, workers=3, logger=Logger())
 
-    positional arguments:
-      task        perform specified task and all it's dependancies
+output:
 
-    optional arguments:
-      -h, --help  show this help message and exit
-
-    tasks:
-      android     Package Android app.
-      clean       Clean build directory.
-      html        Generate HTML.
-      images      Prepare images.
-          
-Dependancies between tasks are taken care of too.
-
-::
- 
-    $ ./example.py android
-    [ example.py - Starting task "clean" ]
-    Cleaning build directory...
-    [ example.py - Completed task "clean" ]
-    [ example.py - Starting task "html" ]
-    Generating HTML...
-    [ example.py - Completed task "html" ]
-    [ example.py - Ignoring task "images" ]
-    [ example.py - Starting task "android" ]
-    Packaging android app...
-    [ example.py - Completed task "android" ]
-
-Contributing
-============
-
-microbuild is hosted at https://github.com/CalumJEadie/microbuild and contributions are
-very welcome.
-
-epydoc_ is used for documentation generation and unittest_ for tests.
-
-Run ``build.py apidoc`` to generate documentation and ``build.py test`` to run all unit
-tests.
-
-.. _epydoc: http://epydoc.sourceforge.net
-.. _unittest: http://docs.python.org/2/library/unittest.html
+    build started (c, a, b, d)
+    task a is added to queue
+    task b is added to queue
+    task c is added to queue
+    task c is started
+       c:  pass
+    task c is completed in 0 seconds
+    task a is started
+       a:  sleep 1 sec
+    task a is completed in 1 seconds
+    task b is started
+       b:  sleep 2 sec
+    task b is completed in 2 seconds
+    task d(a, b, c) is started
+       d:  sleep 1 sec
+    task d(a, b, c) is completed in 2 seconds
+    build ended (c, a, b, d) in 4 seconds 
 
 License
 =======
