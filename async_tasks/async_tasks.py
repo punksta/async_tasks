@@ -177,25 +177,3 @@ def run_on_executor(task_, executor, logger=Logger()):
     stater()
 
     logger_wrapper.on_build_end(deps, (datetime.now() - t).seconds)
-
-
-def make_task(number):
-    return Task(lambda logger: number, [])
-
-r = range(0, 5000)
-numbers = list(map(make_task, r))
-
-
-@task(*numbers)
-def return_sum(logger):
-    return functools.reduce(lambda a, b: a + b.result, numbers, 0)
-
-
-@task(return_sum)
-def exit(logger):
-    return return_sum.result
-
-
-run(exit, 500)
-
-print(return_sum.result, sum(r))
