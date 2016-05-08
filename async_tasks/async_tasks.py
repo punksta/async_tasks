@@ -1,31 +1,55 @@
+__author__ = "Stanislav Shakirov"
+__license__ = "MIT License"
+__contact__ = "https://github.com/CalumJEadie/microbuild"
+
 import functools
 
 import concurrent
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from threading import Lock
+from time import sleep
 
 tasks = []
 
 
 class Logger(object):
     def on_end_executing(self, task, seconds):
-        print("task %s is completed in %s seconds" % (task, seconds))
+        print("task %s is completed in %s seconds" % (self.str_task(task), seconds))
 
     def on_start_executing(self, task):
-        print("task %s is started" % task)
+        print("task %s is started" % self.str_task(task))
 
     def on_added_to_queue(self, task):
-        print("task %s is added to queue" % task)
+        print("task %s is added to queue" % self.str_task(task))
 
     def on_build_start(self, tasks):
-        print('build started %s' % Task.str_task_list(tasks))
+        print('build started %s' % self.str_task_list(tasks))
 
     def on_build_end(self, tasks, seconds):
-        print('build ended %s in %s seconds ' % (Task.str_task_list(tasks), seconds))
+        print('build ended %s in %s seconds ' % (self.str_task_list(tasks), seconds))
 
     def log_in_task(selt, task, obj):
         print('   %s:  %s' % (task.name, str(obj)))
+
+    def str_task(self, task):
+        return task.name +  self.str_task_list(task.dependencies)
+
+    @classmethod
+    def str_task_list(cls, tasks):
+        def str_item(index, dep, size):
+            if index is 0:
+                if index is not size - 1:
+                    return '(' + dep.name + ', '
+                else:
+                    return '(' + dep.name + ')'
+            elif index is not size - 1:
+                return dep.name + ', '
+            else:
+                return dep.name + ')'
+
+        return functools.reduce(lambda ite_list, index_dep: ite_list + str_item(index_dep[0], index_dep[1], len(tasks)),
+                                enumerate(tasks), '')
 
 
 class LoggerWrapper(object):
@@ -65,16 +89,22 @@ class Task(object):
         self.func = func
         self.name = func.__name__
         self.dependencies = dependencies
+        self.result = None
         tasks.append(self)
 
     def __call__(self, *args, **kwargs):
         if self.logger:
             self.logger.on_start_executing(self)
         t = datetime.now()
-        r = self.func.__call__(lambda s: self.logger.log_in_task(self, s))
+        self.result = self.func.__call__(lambda s: self.logger.log_in_task(self, s))
         if self.logger:
             self.logger.on_end_executing(self,  (datetime.now() - t).seconds)
-        return r
+        return self.result
+
+
+    def is_complete(self):
+        return self.result is not None
+
 
     @classmethod
     def is_task(cls, obj):
@@ -86,24 +116,8 @@ class Task(object):
     def set_logger(self, logger):
         self.logger = logger
 
-    @classmethod
-    def str_task_list(cls, tasks):
-        def str_item(index, dep, size):
-            if index is 0:
-                if index is not size - 1:
-                    return '(' + dep.name + ', '
-                else:
-                    return '(' + dep.name + ')'
-            elif index is not size - 1:
-                return dep.name + ', '
-            else:
-                return dep.name + ')'
-
-        return functools.reduce(lambda ite_list, index_dep: ite_list + str_item(index_dep[0], index_dep[1], len(tasks)),
-                                enumerate(tasks), '')
-
     def __str__(self):
-        return self.name + Task.str_task_list(self.dependencies)
+        return self.name
 
 
 def task(*dependencies):
@@ -129,7 +143,7 @@ def inner_run(current_task, future_tasks, executor, notifer):
     return current_task
 
 
-def run(task_, workers, logger=Logger()):
+def run(task_, workers = 1, logger=Logger()):
     with ThreadPoolExecutor(max_workers=workers) as executor:
         run_on_executor(task_, executor, logger)
 
@@ -163,3 +177,28 @@ def run_on_executor(task_, executor, logger=Logger()):
     stater()
 
     logger_wrapper.on_build_end(deps, (datetime.now() - t).seconds)
+
+
+def make_task(number):
+    def returnWithWhait(logger):
+        sleep(1)
+        return number
+
+    return Task(returnWithWhait, [])
+
+r = range(0, 1500)
+numbers = list(map(make_task, r))
+
+@task(*numbers)
+def return_sum(logger):
+    return functools.reduce(lambda a, b: a + b.result, numbers, 0)
+
+@task(return_sum)
+def exit(logger):
+    return return_sum.result
+
+
+run(exit, 500)
+
+print(return_sum.result)
+print(sum(r))
