@@ -1,9 +1,7 @@
 import functools
 
 import concurrent
-from collections import Set
 from concurrent.futures import ThreadPoolExecutor
-import time
 from datetime import datetime
 from threading import Lock
 

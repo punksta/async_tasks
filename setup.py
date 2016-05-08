@@ -1,13 +1,13 @@
 from distutils.core import setup
 
 setup(
-   name="microbuild",
-   version="0.3.3",
-   author="Calum J. Eadie",
-   author_email="calum@calumjeadie.com",
-   url="https://github.com/CalumJEadie/microbuild",
-   packages=["microbuild"],
+   name="async_tasks",
+   version="0.4.0",
+   author="Stanislav Shakirov",
+   author_email="skinnystas@gmail.com",
+   url="https://github.com/punksta/async_tasks",
+   packages=["async_tasks"],
    license="MIT License",
-   description="Lightweight Python Build Tool.",
+   description="Lightweight async build tool",
    long_description=open("README.rst").read()+"\n"+open("CHANGES.rst").read()
 )
