@@ -130,8 +130,8 @@ def inner_run(current_task, future_tasks, executor, notifer):
     for d in current_task.dependencies:
         if d not in future_tasks:
             notifer.on_added_to_queue(d)
-        future_d = inner_run(d, future_tasks, executor, notifer)
-        future_tasks.add(future_d)
+            future_d = inner_run(d, future_tasks, executor, notifer)
+            future_tasks.add(future_d)
 
     for f in concurrent.futures.as_completed(map(lambda t: t.future, current_task.dependencies)):
         f.result()
@@ -180,18 +180,16 @@ def run_on_executor(task_, executor, logger=Logger()):
 
 
 def make_task(number):
-    def returnWithWhait(logger):
-        sleep(1)
-        return number
+    return Task(lambda logger: number, [])
 
-    return Task(returnWithWhait, [])
-
-r = range(0, 1500)
+r = range(0, 5000)
 numbers = list(map(make_task, r))
+
 
 @task(*numbers)
 def return_sum(logger):
     return functools.reduce(lambda a, b: a + b.result, numbers, 0)
+
 
 @task(return_sum)
 def exit(logger):
@@ -200,5 +198,4 @@ def exit(logger):
 
 run(exit, 500)
 
-print(return_sum.result)
-print(sum(r))
+print(return_sum.result, sum(r))

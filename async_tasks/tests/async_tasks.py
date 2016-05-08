@@ -1,10 +1,12 @@
 import functools
 import unittest
 from time import sleep
+
+from async_tasks.async_tasks import Logger, run, task, Task
 from .. import async_tasks
 
 
-class TestLogger(async_tasks.Logger):
+class TestLogger(Logger):
     def log_in_task(selt, task, obj):
         pass
 
@@ -37,39 +39,39 @@ class TestBuildSimple(unittest.TestCase):
         def returnWithWhait(logger):
             sleep(1)
             return number
-        return async_tasks.Task(returnWithWhait, [])
+        return Task(returnWithWhait, [])
 
     def make_task(number):
-        return async_tasks.Task(lambda logger: number, [])
+        return Task(lambda logger: number, [])
 
     def test_single_thread_result(self):
         r = range(0, 100)
         numbers = list(map(self.make_task, r))
 
-        @async_tasks.task(*numbers)
+        @task(*numbers)
         def return_sum(logger):
             return functools.reduce(lambda a, b: a + b.result, numbers, 0)
 
-        @async_tasks.task(return_sum)
+        @task(return_sum)
         def exit(logger):
             return return_sum.result
 
-        async_tasks.run(exit, 1, TestLogger())
+        run(exit, 1, TestLogger())
         self.assertEqual(return_sum.result, sum(r))
 
     def test_multi_thread_result(self):
         r = range(0, 100)
         numbers = list(map(self.make_task_delay(), r))
 
-        @async_tasks.task(*numbers)
+        @task(*numbers)
         def return_sum(logger):
             return functools.reduce(lambda a, b: a + b.result, numbers, 0)
 
-        @async_tasks.task(return_sum)
+        @task(return_sum)
         def exit(logger):
             return return_sum.result
 
-        async_tasks.run(exit, 100, TestLogger())
+        run(exit, 100, TestLogger())
         self.assertEqual(return_sum.result, sum(r))
 
 
