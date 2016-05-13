@@ -96,9 +96,17 @@ class Task(object):
         if self.logger:
             self.logger.on_start_executing(self)
         t = datetime.now()
-        self.result = self.func.__call__(lambda s: self.logger.log_in_task(self, s))
+
+        logger = lambda s: self.logger.log_in_task(self, s) if self.logger else lambda s: {}
+        par = self.func.__code__.co_varnames
+        if len(par) > 0 and par[0] is 'logger':
+            self.result = self.func.__call__(logger)
+        else:
+            self.result = self.func.__call__()
+
         if self.logger:
             self.logger.on_end_executing(self,  (datetime.now() - t).seconds)
+
         return self.result
 
 

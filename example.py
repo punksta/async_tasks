@@ -1,4 +1,3 @@
-#!/usr/bin/python
 import os
 import shutil
 import zipfile
@@ -29,13 +28,13 @@ def create_temp_dir(logger):
 
 
 @task(create_temp_dir)
-def load_logo(logger):
+def load_logo():
     file_address = load_file("https://avatars1.githubusercontent.com/u/13404754?v=3&s=460", "punksta_logo.png")
     return file_address
 
 
 @task(create_temp_dir)
-def load_content(logger):
+def load_content():
     file_address = load_file("https://raw.githubusercontent.com/punksta/async_tasks/master/example.py", "example.py")
     return file_address
 
