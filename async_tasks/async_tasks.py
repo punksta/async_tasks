@@ -8,8 +8,6 @@ import concurrent
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from threading import Lock
-from time import sleep
-
 tasks = []
 
 
@@ -185,3 +183,53 @@ def run_on_executor(task_, executor, logger=Logger()):
     stater()
 
     logger_wrapper.on_build_end(deps, (datetime.now() - t).seconds)
+
+
+class TeamCityLogger(Logger):
+    @classmethod
+    def progress_message(cls, message):
+        print("##teamcity[progressMessage '" + message + "']")
+
+    @classmethod
+    def progress_start(cls, message):
+        print("##teamcity[progressStart '" + message + "']")
+
+    @classmethod
+    def progress_end(cls, message):
+        print("##teamcity[progressFinish '" + message + "']")
+
+    @classmethod
+    def status_message(cls, message, status='NORMAL', error_details=''):
+        print("##teamcity[message text='%s' errorDetails='%s' status='%s']" % (message, status, error_details))
+
+    def onBuildStart(self, tasks):
+        pass
+
+    def onAddedToQueue(self, task):
+        pass
+
+    def onBuildEnd(self, tasks):
+        pass
+
+    def onStartExecuting(self, task):
+        self.progress_start(str(task))
+
+    def log_in_task(self, task, obj):
+        self.progress_message(obj)
+
+    def on_build_start(self, tasks):
+        pass
+
+    def on_added_to_queue(self, task):
+        pass
+
+    def on_end_executing(self, task, seconds):
+        self.progress_end(self.str_task(task))
+
+    def on_start_executing(self, task):
+        self.progress_start(self.str_task(task))
+
+    def on_build_end(self, tasks, seconds):
+        pass
+
+

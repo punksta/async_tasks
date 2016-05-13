@@ -4,7 +4,7 @@ import zipfile
 
 import requests
 
-from async_tasks.async_tasks import task, run
+from async_tasks.async_tasks import task, run, TeamCityLogger
 
 dir = './temp/'
 
@@ -69,4 +69,4 @@ def clear_files(logger):
     pass
 
 
-run(clear_files, 2)
+run(clear_files, 2, TeamCityLogger())
